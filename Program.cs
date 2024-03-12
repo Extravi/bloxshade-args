@@ -67,9 +67,16 @@ namespace RobloxPlayerBeta
             }
             else
             {
-                Console.WriteLine("Roblox installation was not found. https://www.roblox.com/download/client");
-                Console.WriteLine("Press any key to continue...");
-                Console.ReadKey();
+                DialogResult result = MessageBox.Show("Roblox installation was not found. Do you want to download it?", "Warning", MessageBoxButtons.OKCancel, MessageBoxIcon.Warning);
+                if (result == DialogResult.OK)
+                {
+                    ProcessStartInfo psi = new ProcessStartInfo
+                    {
+                        FileName = "https://www.roblox.com/download/client",
+                        UseShellExecute = true
+                    };
+                    Process.Start(psi);
+                }
             }
         }
         static string CheckForAnsel(string folderPath, string executableName)
