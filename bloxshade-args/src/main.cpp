@@ -22,7 +22,7 @@ DWORD valueSize = sizeof(value);
 bool bloxstrap = false;
 std::string bloxstrapPath;
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
+int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     LPWSTR* argv;
     int argc;
     argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -31,7 +31,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
     std::string arguments;
     for (int i = 1; i < argc; ++i) {
         int size_needed = WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, nullptr, 0, nullptr, nullptr);
-        std::string narrow_string(size_needed, 0);
+        std::string narrow_string(size_needed - 1, 0);
         WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &narrow_string[0], size_needed, nullptr, nullptr);
         arguments += "\"" + narrow_string + "\" ";
     }
