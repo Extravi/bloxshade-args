@@ -93,7 +93,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         try {
             file >> data;
         }
-        catch (json::parse_error& e) {
+        catch (json::parse_error&) {
             std::cerr << "failed to read file" << std::endl;
             return 1;
         }
