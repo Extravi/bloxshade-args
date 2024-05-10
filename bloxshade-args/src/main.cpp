@@ -40,7 +40,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     LocalFree(argv);
 
     // roblox path
-    RegGetValueA(HKEY_CLASSES_ROOT, "roblox-player\\shell\\open\\command", nullptr, RRF_RT_REG_SZ, nullptr, value, &valueSize);
+    RegGetValueA(HKEY_CURRENT_USER, "Software\\Classes\\roblox-player\\shell\\open\\command", nullptr, RRF_RT_REG_SZ, nullptr, value, &valueSize);
 
     // convert to C++ string
     std::string robloxPath(value);
