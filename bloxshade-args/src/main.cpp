@@ -7,8 +7,11 @@
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <locale>
+#include <codecvt>
 #include <cstring>
 #include <Windows.h>
+#include <lmcons.h>
 #include <shellapi.h>
 
 #include "json.hpp"
@@ -17,10 +20,49 @@ using json = nlohmann::json;
 
 // variables 
 std::string arguments;
-char value[MAX_PATH];
+wchar_t value[MAX_PATH];
 DWORD valueSize = sizeof(value);
 bool bloxstrap = false;
 std::string bloxstrapPath;
+
+// turn off warning for 4996
+#pragma warning(disable : 4996)
+
+// 8.3 format
+std::wstring GetShortUsername() {
+    // current username
+    wchar_t username[UNLEN + 1];
+    DWORD username_len = UNLEN + 1;
+    if (!GetUserNameW(username, &username_len)) {
+        // failed to get the username
+        return L"";
+    }
+
+    // get the short path form of the user's home directory
+    std::wstring userProfilePath = L"C:\\Users\\" + std::wstring(username);
+    DWORD bufferSize = GetShortPathNameW(userProfilePath.c_str(), NULL, 0);
+    if (bufferSize == 0) {
+        // failed to get the short path name
+        return L"";
+    }
+
+    std::vector<wchar_t> shortPathBuffer(bufferSize);
+    if (GetShortPathNameW(userProfilePath.c_str(), shortPathBuffer.data(), bufferSize) == 0) {
+        // failed to retrieve the short path name
+        return L"";
+    }
+
+    std::wstring shortPath(shortPathBuffer.data());
+
+    // extract the short username
+    size_t pos = shortPath.find_last_of(L"\\");
+    if (pos == std::wstring::npos) {
+        // failed to extract short username from path
+        return L"";
+    }
+
+    return shortPath.substr(pos + 1);
+}
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     LPWSTR* argv;
@@ -40,10 +82,40 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     LocalFree(argv);
 
     // roblox path
-    RegGetValueA(HKEY_CURRENT_USER, "Software\\Classes\\roblox-player\\shell\\open\\command", nullptr, RRF_RT_REG_SZ, nullptr, value, &valueSize);
+    RegGetValueW(HKEY_CURRENT_USER, L"Software\\Classes\\roblox-player\\shell\\open\\command", nullptr, RRF_RT_REG_SZ, nullptr, value, &valueSize);
 
-    // convert to C++ string
-    std::string robloxPath(value);
+    // convert string
+    std::wstring_convert<std::codecvt_utf8<wchar_t>, wchar_t> converter;
+    std::wstring wstrValue(value);
+    std::string robloxPath = converter.to_bytes(wstrValue);
+
+    // 8.3 username format
+    std::wstring shortUsername = GetShortUsername();
+    std::string newShortUsername = converter.to_bytes(shortUsername);
+    if (!shortUsername.empty()) {
+        std::cout << "Short username: " << newShortUsername << std::endl;
+    }
+    else {
+        std::cout << "failed to get the short username" << std::endl;
+    }
+
+    // replace username from robloxPath
+    wchar_t username[UNLEN + 1];
+    DWORD username_len = UNLEN + 1;
+    if (GetUserNameW(username, &username_len)) {
+        std::string narrowUsername = converter.to_bytes(username);
+        size_t pos = robloxPath.find(narrowUsername);
+        if (pos != std::string::npos) {
+            robloxPath.erase(pos, narrowUsername.length());
+            robloxPath.insert(pos, newShortUsername); // replace with 8.3 username format
+        }
+        else {
+            std::cout << "username not found in the path" << std::endl;
+        }
+    }
+    else {
+        std::cout << "failed to get the username" << std::endl;
+    }
 
     if (robloxPath == "") {
         // prints are for me when im testing this
