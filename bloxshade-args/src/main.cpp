@@ -35,29 +35,40 @@ std::wstring GetShortUsername() {
     DWORD username_len = UNLEN + 1;
     if (!GetUserNameW(username, &username_len)) {
         // failed to get the username
+        std::cout << "failed to get the username: " << GetLastError() << std::endl;
         return L"";
     }
 
-    // get the short path form of the user's home directory
-    std::wstring userProfilePath = L"C:\\Users\\" + std::wstring(username);
-    DWORD bufferSize = GetShortPathNameW(userProfilePath.c_str(), NULL, 0);
+    // Get the user profile path using environment variable
+    wchar_t userProfilePath[MAX_PATH];
+    if (!GetEnvironmentVariableW(L"USERPROFILE", userProfilePath, MAX_PATH)) {
+        // failed to get the user profile path
+        std::cout << "failed to get the user profile path: " << GetLastError() << std::endl;
+        return L"";
+    }
+
+    // Get the short path form of the user's home directory
+    DWORD bufferSize = GetShortPathNameW(userProfilePath, NULL, 0);
     if (bufferSize == 0) {
         // failed to get the short path name
+        std::cout << "failed to get the short path name: " << GetLastError() << std::endl;
         return L"";
     }
 
     std::vector<wchar_t> shortPathBuffer(bufferSize);
-    if (GetShortPathNameW(userProfilePath.c_str(), shortPathBuffer.data(), bufferSize) == 0) {
+    if (GetShortPathNameW(userProfilePath, shortPathBuffer.data(), bufferSize) == 0) {
         // failed to retrieve the short path name
+        std::cout << "failed to retrieve the short path name: " << GetLastError() << std::endl;
         return L"";
     }
 
     std::wstring shortPath(shortPathBuffer.data());
 
-    // extract the short username
+    // Extract the short username
     size_t pos = shortPath.find_last_of(L"\\");
     if (pos == std::wstring::npos) {
         // failed to extract short username from path
+        std::cout << "failed to extract short username from path: " << GetLastError() << std::endl;
         return L"";
     }
 
@@ -110,7 +121,20 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             robloxPath.insert(pos, newShortUsername); // replace with 8.3 username format
         }
         else {
-            std::cout << "username not found in the path" << std::endl;
+            std::cout << "Username not found in the path" << std::endl;
+            // find "/" pos
+            std::vector<size_t> slashPositions;
+            for (size_t i = 0; i < robloxPath.length(); ++i) {
+                if (robloxPath[i] == '\\') {
+                    slashPositions.push_back(i);
+                }
+            }
+            size_t secondSlashPos = slashPositions[1];
+            size_t thirdSlashPos = slashPositions[2];
+            std::string newRobloxPath = robloxPath.substr(0, secondSlashPos + 1) + newShortUsername + robloxPath.substr(thirdSlashPos);
+            // set new path
+            robloxPath = newRobloxPath;
+            std::cout << "We set a new path trying something else" << std::endl;
         }
     }
     else {
