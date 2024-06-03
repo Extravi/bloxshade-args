@@ -143,14 +143,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
             else {
                 std::cout << "Users path is false" << std::endl;
                 std::cout << pathToC << std::endl;
-                // show message box
-                int result = MessageBoxW(nullptr, L"It looks like you're using Bloxstrap, and while Bloxshade does work with Bloxstrap, it's best to install it in your user folder. Clicking \"okay\" will allow the program to continue, but it may fail. If that happens, try reinstalling Bloxstrap in your user folder under your user account. If you wish to stop seeing these prompts, please reinstall Bloxstrap in your user folder under your user account.", L"Warning", MB_OKCANCEL | MB_ICONWARNING);
-                if (result == IDOK) {
-                    skip = true;
-                }
-                else {
-                    return 0;
-                }
+                skip = true;
             }
             if (!skip) {
                 std::string path = robloxPath.substr(start, end - start);
