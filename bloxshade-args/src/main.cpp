@@ -2,7 +2,7 @@
 //              It then retrieves the file path using registry keys and a JSON file.
 //              Finally, it launches the program as eurotrucks2.exe to disguise it as an Nvidia Ansel compatible game.
 // Author: Dante (dante@extravi.dev)
-// Date: 2024-06-03
+// Date: 2024-06-04
 
 #include <iostream>
 #include <fstream>
@@ -11,7 +11,6 @@
 #include <codecvt>
 #include <cstring>
 #include <Windows.h>
-#include <lmcons.h>
 #include <shellapi.h>
 
 #include "json.hpp"
@@ -29,54 +28,10 @@ bool skip = false;
 // turn off warning for 4996
 #pragma warning(disable : 4996)
 
-// 8.3 format
-std::wstring GetShortUsername() {
-    // current username
-    wchar_t username[UNLEN + 1];
-    DWORD username_len = UNLEN + 1;
-    if (!GetUserNameW(username, &username_len)) {
-        // failed to get the username
-        std::cout << "failed to get the username: " << GetLastError() << std::endl;
-        return L"";
-    }
-
-    // Get the user profile path using environment variable
-    wchar_t userProfilePath[MAX_PATH];
-    if (!GetEnvironmentVariableW(L"USERPROFILE", userProfilePath, MAX_PATH)) {
-        // failed to get the user profile path
-        std::cout << "failed to get the user profile path: " << GetLastError() << std::endl;
-        return L"";
-    }
-
-    // Get the short path form of the user's home directory
-    DWORD bufferSize = GetShortPathNameW(userProfilePath, NULL, 0);
-    if (bufferSize == 0) {
-        // failed to get the short path name
-        std::cout << "failed to get the short path name: " << GetLastError() << std::endl;
-        return L"";
-    }
-
-    std::vector<wchar_t> shortPathBuffer(bufferSize);
-    if (GetShortPathNameW(userProfilePath, shortPathBuffer.data(), bufferSize) == 0) {
-        // failed to retrieve the short path name
-        std::cout << "failed to retrieve the short path name: " << GetLastError() << std::endl;
-        return L"";
-    }
-
-    std::wstring shortPath(shortPathBuffer.data());
-
-    // Extract the short username
-    size_t pos = shortPath.find_last_of(L"\\");
-    if (pos == std::wstring::npos) {
-        // failed to extract short username from path
-        std::cout << "failed to extract short username from path: " << GetLastError() << std::endl;
-        return L"";
-    }
-
-    return shortPath.substr(pos + 1);
-}
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
+    std::locale::global(std::locale("en_US.UTF-8"));
+    std::cout.imbue(std::locale());
+
     LPWSTR* argv;
     int argc;
     argv = CommandLineToArgvW(GetCommandLineW(), &argc);
@@ -111,64 +66,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         return 0;
     }
 
-    // 8.3 username format
-    std::wstring shortUsername = GetShortUsername();
-    std::string newShortUsername = converter.to_bytes(shortUsername);
-    if (!shortUsername.empty()) {
-        std::cout << "Short username: " << newShortUsername << std::endl;
-    }
-    else {
-        std::cout << "failed to get the short username" << std::endl;
-    }
-
-    // replace username from robloxPath
-    wchar_t username[UNLEN + 1];
-    DWORD username_len = UNLEN + 1;
-    if (GetUserNameW(username, &username_len)) {
-        std::string narrowUsername = converter.to_bytes(username);
-        size_t pos = robloxPath.find(narrowUsername);
-        if (pos != std::string::npos) {
-            robloxPath.erase(pos, narrowUsername.length());
-            robloxPath.insert(pos, newShortUsername); // replace with 8.3 username format
-        }
-        else {
-            std::cout << "Username not found in the path" << std::endl;
-            // check if path is under the users directory
-            size_t start = robloxPath.find('"') + 1;
-            size_t end = robloxPath.rfind('"');
-            std::string pathToC = robloxPath.substr(start, end - start);
-            if (pathToC.find("C:\\Users") == 0) {
-                std::cout << "Users path is true" << std::endl;
-            }
-            else {
-                std::cout << "Users path is false" << std::endl;
-                std::cout << pathToC << std::endl;
-                skip = true;
-            }
-            if (!skip) {
-                std::string path = robloxPath.substr(start, end - start);
-                std::vector<size_t> slashPositions;
-                // find "/" pos
-                for (size_t i = 0; i < robloxPath.length(); ++i) {
-                    if (robloxPath[i] == '\\') {
-                        slashPositions.push_back(i);
-                    }
-                }
-                size_t secondSlashPos = slashPositions[1];
-                size_t thirdSlashPos = slashPositions[2];
-                std::string newRobloxPath = robloxPath.substr(0, secondSlashPos + 1) + newShortUsername + robloxPath.substr(thirdSlashPos);
-                // set new path
-                robloxPath = newRobloxPath;
-                std::cout << "We set a new path trying something else" << std::endl;
-            }
-        }
-    }
-    else {
-        std::cout << "failed to get the username" << std::endl;
-    }
-
-    // Roblox seems to be installled from reg key
-    std::cout << "Roblox install found" << std::endl;
+    // print the reg key
     std::cout << robloxPath << std::endl;
 
     // extract the path
@@ -186,6 +84,18 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     else {
         std::cout << "Program files is false" << std::endl;
     }
+
+    // check if path is under the users directory
+    if (path.find("C:\\Users") == 0) {
+        std::cout << "Users path is true" << std::endl;
+    }
+    else {
+        std::cout << "Users path is false" << std::endl;
+        std::cout << path << std::endl;
+    }
+
+    // Roblox seems to be installled from reg key
+    std::cout << "Roblox install found" << std::endl;
 
     // bloxstrap
     size_t BloxstrapPos = path.find("Bloxstrap.exe");
