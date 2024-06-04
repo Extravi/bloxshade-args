@@ -139,10 +139,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\Discord SDK\src\connection_win.cpp" />
+    <ClCompile Include="src\Discord SDK\src\discord_register_win.cpp" />
+    <ClCompile Include="src\Discord SDK\src\discord_rpc.cpp" />
+    <ClCompile Include="src\Discord SDK\src\dllmain.cpp" />
+    <ClCompile Include="src\Discord SDK\src\rpc_connection.cpp" />
+    <ClCompile Include="src\Discord SDK\src\serialization.cpp" />
     <ClCompile Include="src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="src\Discord SDK\src\backoff.h" />
+    <ClInclude Include="src\Discord SDK\src\msg_queue.h" />
+    <ClInclude Include="src\Discord SDK\src\rpc_connection.h" />
+    <ClInclude Include="src\Discord SDK\src\serialization.h" />
+    <ClInclude Include="src\Discord.h" />
+    <ClInclude Include="src\discord_register.h" />
+    <ClInclude Include="src\discord_rpc.h" />
     <ClInclude Include="src\json.hpp" />
   </ItemGroup>
   <ItemGroup>

@@ -12,6 +12,10 @@
 #include <cstring>
 #include <Windows.h>
 #include <shellapi.h>
+#include "Discord.h"
+#include <time.h>
+#include <chrono>
+static int64_t eptime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
 #include "json.hpp"
 
@@ -27,6 +31,26 @@ bool skip = false;
 
 // turn off warning for 4996
 #pragma warning(disable : 4996)
+
+Discord* g_Discord;
+
+void Discord::Initialize()
+{
+    DiscordEventHandlers Handle;
+    memset(&Handle, 0, sizeof(Handle));
+    Discord_Initialize("1247657703266975775", &Handle, 1, NULL);
+}
+
+void Discord::Update()
+{
+    DiscordRichPresence discordPresence;
+    memset(&discordPresence, 0, sizeof(discordPresence));
+    discordPresence.startTimestamp = eptime;
+    discordPresence.largeImageKey = "https://extravi.dev/update/RobloxRPC.png";
+    discordPresence.largeImageText = "Playing Roblox with Bloxshade";
+    discordPresence.smallImageKey = "https://extravi.dev/update/RobloxRPCAsset.png";
+    Discord_UpdatePresence(&discordPresence);
+}
 
 std::wstring convertToWideString(const std::string& str) {
     int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
@@ -155,6 +179,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     else {
         std::cout << "Bloxstrap is false" << std::endl;
     }
+
+    // set discord rpc
+    g_Discord->Initialize();
+    g_Discord->Update();
 
     // combine the path and arguments
     std::wstring wPath = convertToWidePath(bloxstrap ? bloxstrapPath : path);
