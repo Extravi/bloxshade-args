@@ -28,6 +28,20 @@ bool skip = false;
 // turn off warning for 4996
 #pragma warning(disable : 4996)
 
+std::wstring convertToWideString(const std::string& str) {
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), NULL, 0);
+    std::wstring wstr(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, str.c_str(), (int)str.size(), &wstr[0], size_needed);
+    return wstr;
+}
+
+std::wstring convertToWidePath(const std::string& path) {
+    int size_needed = MultiByteToWideChar(CP_UTF8, 0, path.c_str(), (int)path.size(), NULL, 0);
+    std::wstring wstr(size_needed, 0);
+    MultiByteToWideChar(CP_UTF8, 0, path.c_str(), (int)path.size(), &wstr[0], size_needed);
+    return wstr;
+}
+
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow) {
     std::locale::global(std::locale("en_US.UTF-8"));
     std::cout.imbue(std::locale());
@@ -37,12 +51,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 
     // process arguments
-    std::string arguments;
+    std::wstring wide_arguments;
     for (int i = 1; i < argc; ++i) {
-        int size_needed = WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, nullptr, 0, nullptr, nullptr);
-        std::string narrow_string(size_needed - 1, 0);
-        WideCharToMultiByte(CP_UTF8, 0, argv[i], -1, &narrow_string[0], size_needed, nullptr, nullptr);
-        arguments += "\"" + narrow_string + "\" ";
+        std::wstring warg(argv[i]);
+        wide_arguments += L"\"" + warg + L"\" ";
     }
 
     // free memory allocated by CommandLineToArgvW
@@ -145,24 +157,19 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     // combine the path and arguments
-    if (bloxstrap) {
-        std::string command = "\"" + bloxstrapPath + "\" " + arguments;
+    std::wstring wPath = convertToWidePath(bloxstrap ? bloxstrapPath : path);
+    std::wstring completeArguments = L"\"" + wPath + L"\" " + wide_arguments;
+    LPWSTR writable_arguments_ptr = (LPWSTR)completeArguments.c_str();
 
-        // print command
-        std::cout << command << std::endl;
+    PROCESS_INFORMATION ProcessInfo;
+    STARTUPINFO StartupInfo;
+    ZeroMemory(&StartupInfo, sizeof(StartupInfo));
+    StartupInfo.cb = sizeof(StartupInfo);
 
-        // start roblox
-        // yes i know WinExec is deprecated but idc
-        WinExec(command.c_str(), SW_HIDE);
-    }
-    else {
-        std::string command = "\"" + path + "\" " + arguments;
-
-        // print command
-        std::cout << command << std::endl;
-
-        // start roblox
-        WinExec(command.c_str(), SW_HIDE);
+    if (CreateProcessW(NULL, writable_arguments_ptr, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo)) {
+        WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+        CloseHandle(ProcessInfo.hThread);
+        CloseHandle(ProcessInfo.hProcess);
     }
 
     // debug to read output won't matter anyway since this will be a hidden window
