@@ -46,7 +46,7 @@ void Discord::Update()
     DiscordRichPresence discordPresence;
     memset(&discordPresence, 0, sizeof(discordPresence));
     discordPresence.startTimestamp = eptime;
-    discordPresence.largeImageKey = "https://extravi.dev/update/RobloxRPC.png";
+    discordPresence.largeImageKey = "https://extravi.dev/update/RobloxRPC2.png";
     discordPresence.largeImageText = "Playing Roblox with Bloxshade";
     discordPresence.smallImageKey = "https://extravi.dev/update/RobloxRPCAsset.png";
     Discord_UpdatePresence(&discordPresence);
@@ -181,8 +181,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     }
 
     // set discord rpc
-    g_Discord->Initialize();
-    g_Discord->Update();
+    if (!bloxstrap) {
+        g_Discord->Initialize();
+        g_Discord->Update();
+    }
 
     // combine the path and arguments
     std::wstring wPath = convertToWidePath(bloxstrap ? bloxstrapPath : path);
