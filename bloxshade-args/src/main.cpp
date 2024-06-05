@@ -11,9 +11,11 @@
 #include <codecvt>
 #include <cstring>
 #include <Windows.h>
+#include <tlhelp32.h>
 #include <shellapi.h>
 #include "Discord.h"
 #include <time.h>
+#include <future>
 #include <chrono>
 static int64_t eptime = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 
@@ -32,6 +34,29 @@ bool skip = false;
 // turn off warning for 4996
 #pragma warning(disable : 4996)
 
+bool IsProcessRunning(int pid) {
+    bool isRunning = false;
+    HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+    if (hSnapshot != INVALID_HANDLE_VALUE) {
+        PROCESSENTRY32 pe;
+        pe.dwSize = sizeof(PROCESSENTRY32);
+        if (Process32First(hSnapshot, &pe)) {
+            do {
+                if (pe.th32ProcessID == pid) {
+                    isRunning = true;
+                    break;
+                }
+            } while (Process32Next(hSnapshot, &pe));
+        }
+        CloseHandle(hSnapshot);
+    }
+    return isRunning;
+}
+
+void SleepFor(int milliseconds) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(milliseconds));
+}
+
 Discord* g_Discord;
 
 void Discord::Initialize()
@@ -45,10 +70,12 @@ void Discord::Update()
 {
     DiscordRichPresence discordPresence;
     memset(&discordPresence, 0, sizeof(discordPresence));
+    discordPresence.state = "Playing Roblox";
     discordPresence.startTimestamp = eptime;
     discordPresence.largeImageKey = "https://extravi.dev/update/RobloxRPC2.png";
     discordPresence.largeImageText = "Playing Roblox with Bloxshade";
     discordPresence.smallImageKey = "https://extravi.dev/update/RobloxRPCAsset.png";
+    discordPresence.smallImageText = "Playing Roblox";
     Discord_UpdatePresence(&discordPresence);
 }
 
@@ -196,10 +223,27 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     ZeroMemory(&StartupInfo, sizeof(StartupInfo));
     StartupInfo.cb = sizeof(StartupInfo);
 
+    int pid = 0;
     if (CreateProcessW(NULL, writable_arguments_ptr, NULL, NULL, FALSE, 0, NULL, NULL, &StartupInfo, &ProcessInfo)) {
-        WaitForSingleObject(ProcessInfo.hProcess, INFINITE);
+        pid = ProcessInfo.dwProcessId; // process id
+        //std::cout << pid << std::endl;
+
         CloseHandle(ProcessInfo.hThread);
         CloseHandle(ProcessInfo.hProcess);
+    }
+
+    while (true) {
+        if (IsProcessRunning(pid)) {
+            // process exist
+        }
+        else {
+            // process does not exist
+            break;
+        }
+        std::future<void> future = std::async(std::launch::async, []() {
+            SleepFor(1000);
+            });
+        future.wait();
     }
 
     // debug to read output won't matter anyway since this will be a hidden window
