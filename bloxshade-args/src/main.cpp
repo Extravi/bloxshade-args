@@ -232,6 +232,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         CloseHandle(ProcessInfo.hProcess);
     }
 
+    if (pid == 0) {
+        std::cout << "process does not exist" << std::endl;
+        return 0; // exit process did not return or pid or the file does not exist
+    }
+
     while (true) {
         if (IsProcessRunning(pid)) {
             // process exist
