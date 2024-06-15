@@ -197,14 +197,14 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         std::cout << data["VersionGuid"] << std::endl;
 
         if (data["VersionGuid"].is_null()) {
-            std::cerr << "trying something else" << std::endl;
+            std::cout << "trying something else" << std::endl;
             std::cout << data["PlayerVersionGuid"] << std::endl;
         }
 
         // set new path
         std::string versionGuid;
         if (data["VersionGuid"].is_null()) {
-            std::cerr << "setting new versionGuid" << std::endl;
+            std::cout << "setting new versionGuid" << std::endl;
             versionGuid = data["PlayerVersionGuid"];
         }
         else {
