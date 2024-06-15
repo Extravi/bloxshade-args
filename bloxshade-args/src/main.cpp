@@ -2,7 +2,7 @@
 //              It then retrieves the file path using registry keys and a JSON file.
 //              Finally, it launches the program as eurotrucks2.exe to disguise it as an Nvidia Ansel compatible game.
 // Author: Dante (dante@extravi.dev)
-// Date: 2024-06-04
+// Date: 2024-06-14
 
 #include <iostream>
 #include <fstream>
@@ -196,12 +196,25 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
         std::cout << data["VersionGuid"] << std::endl;
 
+        if (data["VersionGuid"].is_null()) {
+            std::cerr << "trying something else" << std::endl;
+            std::cout << data["PlayerVersionGuid"] << std::endl;
+        }
+
         // set new path
-        std::string versionGuid = data["VersionGuid"];
+        std::string versionGuid;
+        if (data["VersionGuid"].is_null()) {
+            std::cerr << "setting new versionGuid" << std::endl;
+            versionGuid = data["PlayerVersionGuid"];
+        }
+        else {
+            versionGuid = data["VersionGuid"];
+        }
         std::string versionsDir = "Versions\\";
         path.replace(BloxstrapPos, strlen("State.json"), versionsDir + versionGuid);
 
         bloxstrapPath = path + "\\eurotrucks2.exe";
+        //std::cout << bloxstrapPath << std::endl;
     }
     else {
         std::cout << "Bloxstrap is false" << std::endl;
