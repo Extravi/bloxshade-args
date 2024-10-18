@@ -167,7 +167,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     size_t RobloxPos = path.find("RobloxPlayerBeta.exe");
 
     if (BloxstrapPos != std::string::npos) {
-        path.replace(BloxstrapPos, strlen("Bloxstrap.exe"), "State.json");
+        path.replace(BloxstrapPos, strlen("Bloxstrap.exe"), "Roblox\\Player");
         bloxstrap = true;
     }
 
@@ -177,41 +177,10 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
 
     if (bloxstrap) {
         std::cout << "Bloxstrap is true" << std::endl;
-
-        // read json
-        std::ifstream file(path);
-        if (!file.is_open()) {
-            std::cerr << "failed to open file" << std::endl;
-            return 1;
+        size_t pos = path.find("Roblox\\Player");
+        if (pos != std::string::npos) {
+            path = path.substr(0, pos + strlen("Roblox\\Player"));
         }
-
-        json data;
-        try {
-            file >> data;
-        }
-        catch (json::parse_error&) {
-            std::cerr << "failed to read file" << std::endl;
-            return 1;
-        }
-
-        std::cout << data["VersionGuid"] << std::endl;
-
-        if (data["VersionGuid"].is_null()) {
-            std::cout << "trying something else" << std::endl;
-            std::cout << data["PlayerVersionGuid"] << std::endl;
-        }
-
-        // set new path
-        std::string versionGuid;
-        if (data["VersionGuid"].is_null()) {
-            std::cout << "setting new versionGuid" << std::endl;
-            versionGuid = data["PlayerVersionGuid"];
-        }
-        else {
-            versionGuid = data["VersionGuid"];
-        }
-        std::string versionsDir = "Versions\\";
-        path.replace(BloxstrapPos, strlen("State.json"), versionsDir + versionGuid);
 
         bloxstrapPath = path + "\\eurotrucks2.exe";
         //std::cout << bloxstrapPath << std::endl;
